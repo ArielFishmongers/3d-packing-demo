@@ -18,6 +18,7 @@ import streamlit as st
 from bin_packing.visualisation import animate_packing, plot_packing  # noqa: E402
 from bin_packing.warehouse_algorithms import AlgorithmConfig, PACKING_MODES
 from bin_packing.warehouse_compare import (  # noqa: E402
+    MAX_WORKERS_LIMIT,
     ComparisonConfig,
     aggregate_across_jobs,
     build_cuboids,
@@ -93,9 +94,10 @@ with st.sidebar:
         n_workers = st.number_input(
             "Parallel processes",
             min_value=1,
-            value=max(1, os.cpu_count() or 4),
+            max_value=MAX_WORKERS_LIMIT,
+            value=min(MAX_WORKERS_LIMIT, max(1, os.cpu_count() or 4)),
             step=1,
-            help="Number of parallel processes used by the packing run.",
+            help=f"Number of parallel processes used by the packing run (max {MAX_WORKERS_LIMIT}).",
         )
 
     st.divider()

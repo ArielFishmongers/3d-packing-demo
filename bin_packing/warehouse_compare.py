@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import multiprocessing as mp
 import os
 import statistics
 import time
@@ -11,6 +12,8 @@ from .models import Cuboid, PackingResult
 from .warehouse_algorithms import AlgorithmConfig, pack_multi_container
 
 ItemDims = dict[tuple[str, str], dict[str, float | tuple[float, float, float]]]
+
+MAX_WORKERS_LIMIT = 16
 
 
 @dataclass(frozen=True)
@@ -225,6 +228,7 @@ def run_jobs_parallel(
     max_workers = config.max_workers
     if max_workers is None:
         max_workers = max(1, os.cpu_count() or 1)
+    max_workers = min(max_workers, MAX_WORKERS_LIMIT)
 
     if max_workers == 1:
         results = []
@@ -238,7 +242,7 @@ def run_jobs_parallel(
     job_results: dict[str, dict[str, object]] = {}
     start = time.perf_counter()
 
-    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+    with ProcessPoolExecutor(max_workers=max_workers, mp_context=mp.get_context("spawn")) as executor:
         future_to_job = {executor.submit(_process_job, args): args[0] for args in args_list}
         for future in as_completed(future_to_job):
             completed += 1
