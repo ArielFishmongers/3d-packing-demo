@@ -95,9 +95,13 @@ with st.sidebar:
             "Parallel processes",
             min_value=1,
             max_value=MAX_WORKERS_LIMIT,
-            value=min(MAX_WORKERS_LIMIT, max(1, os.cpu_count() or 4)),
+            value=1,
             step=1,
-            help=f"Number of parallel processes used by the packing run (max {MAX_WORKERS_LIMIT}).",
+            help=(
+                f"Number of parallel processes used by the packing run (max {MAX_WORKERS_LIMIT}). "
+                "Values > 1 require running outside Streamlit Cloud — the cloud's "
+                "runpy/spawn execution model can't bootstrap worker processes."
+            ),
         )
 
     st.divider()
@@ -122,7 +126,7 @@ if (
     run_clicked = True
     limit = 500
     algorithm_mode = "sequential"
-    n_workers = 2
+    n_workers = 1
 
 if run_clicked and container_dims is not None:
     item_dims = cached_load_item_master()
