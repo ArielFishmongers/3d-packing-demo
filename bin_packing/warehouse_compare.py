@@ -18,9 +18,14 @@ MAX_WORKERS_LIMIT = 16
 
 # Use forkserver on POSIX to avoid re-executing the parent script in workers.
 # Streamlit's entry point loads dashboard.py via runpy, which leaves
-# sys.modules['__main__'].__file__ pointing at dashboard.py; with spawn,
-# workers re-import that file and flood logs with bare-mode warnings.
+# sys.modules['__main__'].__file__ pointing at dashboard.py; with spawn the
+# workers re-import that file and flood logs with bare-mode warnings. The
+# forkserver itself defaults to preloading '__main__' (which has the same
+# effect), so we override that to preload only our worker module.
 _MP_START_METHOD = "spawn" if sys.platform == "win32" else "forkserver"
+_MP_CONTEXT = mp.get_context(_MP_START_METHOD)
+if _MP_START_METHOD == "forkserver":
+    _MP_CONTEXT.set_forkserver_preload([__name__])
 
 
 @dataclass(frozen=True)
@@ -249,7 +254,7 @@ def run_jobs_parallel(
     job_results: dict[str, dict[str, object]] = {}
     start = time.perf_counter()
 
-    with ProcessPoolExecutor(max_workers=max_workers, mp_context=mp.get_context(_MP_START_METHOD)) as executor:
+    with ProcessPoolExecutor(max_workers=max_workers, mp_context=_MP_CONTEXT) as executor:
         future_to_job = {executor.submit(_process_job, args): args[0] for args in args_list}
         for future in as_completed(future_to_job):
             completed += 1
