@@ -97,11 +97,7 @@ with st.sidebar:
             max_value=MAX_WORKERS_LIMIT,
             value=1,
             step=1,
-            help=(
-                f"Number of parallel processes used by the packing run (max {MAX_WORKERS_LIMIT}). "
-                "Values > 1 require running outside Streamlit Cloud — the cloud's "
-                "runpy/spawn execution model can't bootstrap worker processes."
-            ),
+            help=f"Number of parallel processes used by the packing run (max {MAX_WORKERS_LIMIT}).",
         )
 
     st.divider()
